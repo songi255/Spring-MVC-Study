@@ -1,0 +1,7 @@
+<spring:message> 태그로 message 를 출력할 수 있다.
+
+동일문자열 변경 / 다국어 지원 등에 사용할 수 있다.
+
+1. 보여 줄 문자열을 담은 message file 을 작성한다. (label.properties. 프로퍼티 파일로 저장하면 된다.)
+2. Message file 에서 값을 읽어올 MessageSource Bean 을 설정한다.
+3. <spring:message> 로 출력한다.
