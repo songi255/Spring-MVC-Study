@@ -1,5 +1,6 @@
 package detail.config;
 
+import detail.session.AuthService;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,5 +51,12 @@ public class MemberConfig {
         ChangePasswordService pwdSvc = new ChangePasswordService();
         pwdSvc.setMemberDao(memberDao());
         return pwdSvc;
+    }
+
+    @Bean
+    public AuthService authService(){
+        AuthService authService = new AuthService();
+        authService.setMemberDao(memberDao());
+        return authService;
     }
 }

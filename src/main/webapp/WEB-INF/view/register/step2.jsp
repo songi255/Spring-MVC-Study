@@ -26,24 +26,37 @@
                 email:<br>
                 <%-- path에 해당하는 Command 의 property 를 form:input 의 value 로 사용한다. --%>
                 <form:input path="email"/>
+
+                <%-- path에 해당하는 code 를 가진 error message 를 출력한다.
+                    path 를 지정하지 않으면 Global error 를 대상으로 출력한다. --%>
+                <form:errors path="email" />
+
+                <%-- Validator에서 프로퍼티에 error code를 여러개 추가할 수 있었는데, 그런 경우 form:errors 는 전부 출력한다.
+                    element는 에러메시지를 띄울 tag. 기본 span 이다.
+                    delimiter는 구분자 tag. 기본 <br/> 이다.
+                --%>
+                <form:errors path="email" element="div" delimiter="" />
             </label>
         </p>
         <p>
             <label>
                 name : <br>
                 <form:input path="name"/>
+                <form:errors path="name" />
             </label>
         </p>
         <p>
             <label>
                 password : <br>
                 <form:password path="password"/>
+                <form:errors path="password" />
             </label>
         </p>
         <p>
             <label>
                 password confirm : <br>
                 <form:password path="confirmPassword"/>
+                <form:errors path="confirmPassword" />
             </label>
         </p>
         <input type="submit" value="가입 완료">

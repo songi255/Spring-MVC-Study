@@ -30,6 +30,11 @@
                 detail.config.ControllerConfig
             </param-value>
         </init-param>
+        <!-- profile 사용예시 -->
+        <init-param>
+            <param-name>spring.profiles.active</param-name>
+            <param-value>dev</param-value>
+        </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
 

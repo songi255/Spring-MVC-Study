@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -19,6 +20,19 @@ public class MemberDao {
 	// Jdbc Template 를 사용한 예시.
 	// Dao class 안에서 종속성으로 Template 를 사용해서 정의한다.
 	private JdbcTemplate jdbcTemplate;
+
+	// 중복되는 RowMapper 는 한번에 처리했다.
+	private RowMapper<Member> memRowMapper = new RowMapper<Member>() {
+		@Override
+		public Member mapRow(ResultSet rs, int rowNum) throws SQLException {
+			Member member = new Member(rs.getString("EMAIL"),
+					rs.getString("PASSWORD"),
+					rs.getString("NAME"),
+					rs.getTimestamp("REGDATE").toLocalDateTime());
+			member.setId(rs.getLong("ID"));
+			return member;
+		}
+	};
 
 	public MemberDao(DataSource dataSource) {
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
@@ -104,6 +118,34 @@ public class MemberDao {
 		// query()와 차이점은 Collection 이 아닌 그대로 반환할 수 있다는 점이다.
 	}
 
+
+	// 날짜를 이용한 회원검색기능
+	public List<Member> selectByRegdate(LocalDateTime from, LocalDateTime to){
+		List<Member> results = jdbcTemplate.query(
+				"select * from MEMBER where REGDATE between ? and ? " +
+						"order by REGDATE desc",
+				new RowMapper<Member>() {
+					@Override
+					public Member mapRow(ResultSet rs, int rowNum) throws SQLException {
+						Member member = new Member(
+								rs.getString("EMAIL"),
+								rs.getString("PASSWORD"),
+								rs.getString("NAME"),
+								rs.getTimestamp("REGDATE").toLocalDateTime()
+						);
+						member.setId(rs.getLong("ID"));
+						return member;
+					}
+				}, from, to);
+		return results;
+	}
+
+	public Member selectById(Long memId){
+		List<Member> results = jdbcTemplate.query(
+				"select * from MEMBER where ID = ?", memRowMapper, memId
+		);
+		return results.isEmpty() ? null : results.get(0);
+	}
 }
 
 // Exception에 관한 이야기.

@@ -1,9 +1,11 @@
 package detail.config;
 
+import detail.validation.RegisterRequestValidator;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.validation.Validator;
 import org.springframework.web.servlet.config.annotation.*;
 
 @Configuration
@@ -42,5 +44,13 @@ public class MvcConfig implements WebMvcConfigurer {
         // 매핑되는 locale 이 없으면 아무것도 없는 label 을 기본으로 사용하게 된다!
 
         // 실제로 MessageSource 인터페이스의 구현을 보면, getMessage() 는 Locale 을 인자로 받는다.
+    }
+
+    // Global Validator 설정하는 법 - 모든 Controller 에 적용된다.
+    // 이를 사용하면 @Valid 를 사용할 수 있다.
+    // 참고로 @Valid 는 Bean Validation API 에 포함되어있다. 의존 자체는 javax.validation 의 validation-api 이다.
+    @Override
+    public Validator getValidator() {
+        return new RegisterRequestValidator();
     }
 }

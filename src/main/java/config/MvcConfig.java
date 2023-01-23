@@ -1,13 +1,24 @@
 package config;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import detail.session.AuthCheckInterceptor;
+import detail.validation.RegisterRequestValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.validation.Validator;
 import org.springframework.web.servlet.ViewResolver;
-import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.ViewResolverRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.*;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
 // Spring Mvc 활성화. 다양한 설정을 생성한다.
@@ -65,4 +76,60 @@ public class MvcConfig implements WebMvcConfigurer {
     } // 정리를 위해 적은것이지, 실제로는 자동생성되는 코드인것이다.
 
     // Dispatcher 설정을 하기 위해 web.xml 을 작성해주어야 한다. (요청을 받기위한 설정)
+
+
+    // Global Validator 설정
+    @Override
+    public Validator getValidator() {
+        // 사실 RegisterRequestValidator 는 global Validator 로는 적절하지 않다.
+        return new RegisterRequestValidator();
+    }
+
+
+    // HandlerInterceptor 설정
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(authCheckInterceptor())
+                .addPathPatterns("/edit/**")
+                .excludePathPatterns("/edit/help/**");
+        // 경로는 Ant 패턴을 사용한다. 2개 이상의 경로는 ,로 구분하면 된다.
+        // Ant Pattern
+        //  * : 0개 이상의 글자
+        //  ? : 1개 글자
+        //  ** : 0개 이상의 폴더경로
+    }
+
+    @Bean AuthCheckInterceptor authCheckInterceptor(){
+        return new AuthCheckInterceptor();
+    }
+
+
+    // 아래는 HttpMessageConverter 를 추가로 설정할 때 사용하는 메서드이다.
+    // 이를 통해 뭘 할 수 있냐면, 모든 변환대상 날짜에 @JsonFormat 붙이는 대신 일괄변환할 수 있다.
+
+    // Spring MVC 는 java 객체를 HTTP 응답으로 변환 시 HttpMessageConvertor 를 사용한다.
+    //   - Jackson 을 사용한다면 MappingJackson2HttpMessageConvertor를 사용하고, Jaxb 를 사용할떄는...~~
+    // 고로 convertor 를 새롭게 등록해서 날짜변환을 설정하면 굳이 @JsonFormat 하지 않아도 자동으로 변환된다.
+
+    // @EnableWebMvc가 이미 한번 등록하는데, 이렇게 미리 등록된 애들을 converters 파라미터로 받는다.
+
+    @Override
+    public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
+        // Spring 이 쉽게 쓰라고 제공하는 Builder 를 사용한다.
+        ObjectMapper objectMapper = Jackson2ObjectMapperBuilder
+                .json()
+                .featuresToDisable(
+                        // Unix TimeStamp 로 출력하는 기능이다. 이걸 해제한다.
+                        SerializationFeature.WRITE_DATES_AS_TIMESTAMPS
+                        // 해제되면, ISO-8601 로 출력한다.
+                )
+                .simpleDateFormat("yyyyMMddHHmmss") // Date 클래스들에 원하는 형식을 쓰고싶으면 다음 행을 사용한다.
+                // Date 에만 적용되기 때문에, 그 외의 것은 Type 별로 지정해서 사용하면 된다.
+                .serializerByType(LocalDateTime.class, new LocalDateSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                .build();
+        // converter List 에는 기존 Jackson 사용하는 것도 포함되있기 때문에, 먼저 적용하기 위해 0번 index 에 넣어준다.
+        converters.add(0, new MappingJackson2HttpMessageConverter(objectMapper));
+
+        // 참고로 이렇게 적용해도 @JsonFormat 이 더 우선되기 때문에, 이걸 사용한다면 @JsonFormat 은 지워주자.
+    }
 }

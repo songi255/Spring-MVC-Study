@@ -1,0 +1,11 @@
+spring-boot-starter-parent
+    - 필요 모듈의 기본 버전값, 필수 모듈 등을 지정
+spring-boot-starter-web
+    - spring-webmvc, jackson, Validator, 내장 tomcat 등 관련 모듈 등록
+    - Spring MVC 기본 구성 설정기능 활성화(Dispatcher Servlet, Default Servlet, Jackson 등)
+spring-boot-maven-plugin
+    - springboot app 을 생성하고 실행하는 기능 제공
+
+mvnw spring-boot:run 으로 실행
+
+Boot 관련은 이정도로 끝낸다.

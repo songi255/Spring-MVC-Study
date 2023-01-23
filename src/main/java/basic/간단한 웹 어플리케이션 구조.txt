@@ -1,0 +1,66 @@
+간단한 웹 어플리케이션의 전형적인 구조는 다음과 같다.
+    - Front Servlet
+        - Spring MVC 에서는 DispatcherServlet 이 담당한다.
+    - Controller + View
+        - 주요기능
+            - Client 가 요구한 기능을 실행
+            - 응답 결과 생성에 필요한 Model 생성, View 선택
+        - App 의 기능과 사용자 요청을 매개하기만 할 뿐, 직접 Logic 을 수행하지는 않는다.
+            - 대신 Service 에 그 처리를 위임한다.
+    - Service
+        - App 의 기능의 Logic 을 구현한다.
+            - 예를들어, 비밀번호 변경은 핵심 Logic 이다.
+            - Form 보여주기, Login 여부 확인하기 등은 핵심 Logic 이 아니다.
+        - 조금 더 예를 들어보자. 비밀번호 변경 Service의 Logic 은 다음과 같다.
+            - DB에서 대상회원 조회
+                - 없으면 Exception
+            - 비밀번호 변경
+            - 변경내역 DB 반영
+        - Web APP 을 쓰든, 명령행에서 실행하든 동일한 Logic 을 수행할 수 있다.
+        - 대부분 한번의 과정으로 끝나기보단 위와같이 몇 단계를 거치게 된다.
+            - 이런 이유로 Service 는 Transaction 범위에서 실행한다.
+
+        1개의 Service 가 제공하는 기능의 수는 몇개가 적당할까?
+            - 같은 Data 를 사용한다면 모아서 구현할 수도 있다 (회원가입, 비밀번호 변경 등 Member 에 관한 기능들)
+            - 기능별로 1개씩 만들기도 한다.
+                - 필자의 경우는 기능별로 작성하는 것을 선호한다고 한다...
+                    - Class 의 코드 길이를 일정 수준 안에서 유지할 수 있기 때문이다.
+
+        Service 는 처리 결과를 2가지 방법으로 알려준다.
+            - 정상결과 : return 값 사용
+            - 비정상 결과 : Exception 사용
+
+    - Dao
+        - DB 연동에 사용한다.
+        - 목록 / 상세화면 등, 조회만 할 뿐 부가적인 기능이 없는 경우 Controller 에서 직접 사용하기도 한다.
+            - 굳이 Service 를 사용해야 한다는 압박감에서 벗어나도 된다. 그렇게 해도 큰 틀에서 Web App의 계층구조는 유지된다고 본다.
+            - 물론 개발자마다 호불호는 갈린다.
+
+패키지 구성은 어떻게들 할까? 정답은 없지만 아래는 예시이다.
+    - Web 요청 처리영역
+        - Controller, 관련 Class
+        - Validator 도 관점에 따라 여기 포함.
+        - web, member 처럼 영역에 알맞은 package 이름 사용하게 됨
+    - 기능 제공 영역
+        - Service
+        - DAO
+        - Model Classes
+        - 예제에서는 단순히 spring 패키지를 썼지만, 실제로는 domain.member 같이 기능을 잘 표현하는 이름을 사용한다.
+    다시 말하지만 정답은 없다. 팀 구성원 모두가 일관된 규칙에 따라 구성해야 하는게 중요하다.
+
+
+참고 : DDD 에 관해
+    Controller - Service - Dao 구조는 간단한 웹 에는 무리가 없다.
+        - 규모가 커질수록 이 구조의 코드도 복잡해지는 경향이 있다.
+            - 특정기능 분석에 시간이 많이 걸리기도 한다.
+            - 중요한 Logic 구현한 코드가 DAO, Service 등에 흩어지기도 한다.
+            - 중복된 Query, Logic 이 늘어나기도 한다.
+    DDD 는 이 문제를 해결하기 위해 등장했다.
+    UI - Service - Domain - Infra 4영역을 사용하는 것이다.
+        - UI : Controller 에 대응
+        - Infra : DAO 에 대응
+        - **(중요!) Domain : 주요 Domain Model 과 Logic 들이 위치 (Service 가 아니다!!)
+            - 정해진 Pattern 에 따라 Model 을 구현하므로, 업무가 복잡해져도 일정 수준의 복잡도를 유지할 수 있다.
+    관련 내용을 더 찾아보도록 하자.
+
+

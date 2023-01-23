@@ -1,0 +1,107 @@
+Maven 이란?
+    - Project Build / Life Cycle / Site 생성 등.. Project 전반을 위한 관리도구이다.
+
+Maven Archetype 이용한 Project 생성
+    - 미리 정의된 폴더구조와 기반 pom.xml 을 사용해서 Project 생성할 수 있다.
+    - mvn archetype:generate
+        - 첫 시행에 꽤 오래 걸리는데, 필요한 Plugin 과 Module 을 다운하기 때문이다.
+        - Maven 배포판은 첫 시행에 필요한 Module 만 포함하기에 그렇다.
+        - 이제 선택지를 선택해 나가면 설정이 되는데, 실제 입력하는 값은 다음과 같다.
+            - groupId : Project 가 속하는 Group 식별자.
+                - 회사, 본부, 단체 등을 의미하는 값을 입력한다.
+                - package 형식으로 계층표현한다. (net.madvirus 처럼)
+            - artifactId : Project 결과물의 식별자.
+                - Project 나 Module 을 의미하는 값이 온다.
+            - version
+            - package : 생성할 package 입력.
+                - 별도 입력하지 않을 경우, groupId 와 동일한 구조의 package 를 생성한다.
+
+
+Maven 의 주요 폴더
+    - src/main/java : java 소스파일이 위치
+    - src/main/resources : properties, XML 등 resource 파일들이 위치. ClassPath에 포함된다.
+    - src/main/webapp : Web App 관련 파일이 위치 (WEB-INF, JSP 등)
+    - src/test/java : Test 파일 위치
+    - src/test/resources : Test에서 사용되는 resource 파일들 위치
+    자동생성되지 않은 폴더는 직접 생성하면 된다.
+
+컴파일 : mvn compile
+테스트 : mvn test
+    - compile 된 test Class 들은 target/test-classes 에 생성
+    - test 결과 report 는 target/surefire-reports 에 저장됨
+패키징 : mvn package
+
+
+POM 파일 기본
+    - 다루는 주요 설정정보들
+        - 프로젝트 정보 : 이름, 개발자 목록, 라이센스 등
+            - name : 프로젝트 이름
+            - url : 프로젝트 사이트 url
+        - 빌드 설정 : 소스, 리소스, 생명주기별 실행할 Plugin 등 Build 관련 설정 기술
+        - 빌드 환경 : 사용자 환경별로 달라질 수 있는 Profile 정보를 기술
+        - POM 연관정보 : 의존, 상위프로젝트, 포함하는 하위모듈 등을 기술
+
+
+search.maven.org
+    - Maven 을 사용할 떄 자주 찾는 사이트
+    - 중앙 repository 에 등록된 POM 정보를 검색해주는 기능 제공
+        - 중앙 주소는 http://repo1.maven.org/maven2/
+    - 원격 repository 에서 받은 모듈은 local repository 에 저장된다.
+        - [USER_HOME]/.m2/repository 가 기본 저장경로이다.
+            - [groupId]/[artifactId]/[version] 형식으로 폴더 생성 후 저장한다.
+            - packaging 된 module 파일 / pom 파일 / 소스코드 다운 선택 시 소스코드 포함한 jar 파일 이 포함된다.
+
+dependency 에서의 scope
+    - compile : 컴파일에 필요, test 및 runtime 에도 classpath에 포함됨. 기본값임.
+    - runtime : runtime 에 필요. JDBC Driver 등이 예시. Compile 에는 필요하지 않지만, 실행에 필요함을 의미. 배포시 포함
+    - provided : compile 에 필요하지만, 실제 runtime 에는 Container 등에서 기본적으로 제공되는 모듈. (Servlet, JSP API 등...) 배포시 제외됨
+    - test : Mock test 를 위한 Module 이 예시. test 시에 classpath에 포함. 배포시 제외됨.
+
+
+Maven LifeCycle
+    - Build LifeCycle 제공한다.
+        - compile, test, package 모두 build lifecycle 에 속하는 단계이다.
+    - Maven 은 크게 clean, build (default), site 의 3가지 LifeCycle 을 제공한다.
+        - 각 LifeCycle 은 순서를 갖는 phase(단계) 로 구성된다.
+        - 각 단계 별 실행할 plugin goal 이 정의되어, 각 단계마다 알맞은 작업을 실행한다.
+        - 아래에 Default(build) LifeCycle을 구성하는 주요 실행단계를 순서대로 정리해보았다.
+            - generate-sources
+                - compile 과정에 포함될 source 생성. 예를 들어 DB table 과 mapping 되는 java 코드 생성 작업 등
+            - process-sources
+                - filter 와 같은 작업을 source code 에 처리
+            - generate-resources
+                - package 에 포함할 자원 생성
+            - process-resources
+                - filter와 같은 작업을 자원파일에 처리
+                - 자원파일을 class 출력 폴더에 복사한다.
+                - resources:resources 플러그인 실행
+            - compile
+                - 소스코드 컴파일해서 class 출력 폴더에 class 생성
+                - compiler:compile 플러그인 실행
+            - generate-test-sources
+                - test 코드 생성. 예를들어, 특정 Class 에서 자동으로 testCase 를 만드는 작업 등을 시행
+            - process-test-sources
+                - filter 같은 작업을 테스트 소스코드에 처리
+                - resources:testResources 플러그인 실행
+            - generate-test-resources
+            - process-test-resources
+                - test class 출력폴더에 복사
+            - test-compile
+                - compiler:testCompile 플러그인 실행
+            - test
+                - surefire:test 플러그인 실행
+            - package
+                - compile 한 코드와 자원파일들을 jar 나 war 등 배포형식으로 패키징
+                - jar 은 jar:jar, war 은 war:war 등, 배포형식에 따라 다른 플러그인 실행
+            - install
+                - local repository 에 package 복사
+                - install:install 플러그인 실행
+            - deploy
+                - 생성한 package 파일을 원격 repository에 등록해서, 다른 project 에서 사용할 수 있도록 하낟.
+                - deploy:deploy 플러그인 실행
+    - LifeCycle 의 특정 단계를 실행하려면 mvn 명령을 쓰면 된다 (mvn deploy 같이)
+        - 실행 시, 그 단계 앞에 위치한 모든 단계를 실행한다.
+        - 각 단계 실행 시, 각 단계에 묶인 goal 을 실행한다.
+            - plugin:pluginGoal 형식으로 실행기능을 선택한다.
+    - Plugin 을 직접 실행할 수도 있다. (mvn surefire:test 같이)
+        - 단, 이 경우에 해당 Plugin 만 실행하기 때문에 전 단계들을 실행하지는 않는다.
